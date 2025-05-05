@@ -8,29 +8,34 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Paciente extends Authenticatable
+class Profissional extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $table = 'profissionais';
 
     protected $fillable = [
         'nome',
         'email',
         'cpf',
-        'password',
+        'senha',
+        'especialidade',
+        'crm',
         'telefone',
-        'endereco',
-        'data_nascimento',
-        'sexo',
-        'estado_civil',
-        'profissao'
+        'endereco'
     ];
 
     protected $hidden = [
-        'password',
+        'senha',
         'remember_token',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function consultas()
+    {
+        return $this->hasMany(Consulta::class);
+    }
 }

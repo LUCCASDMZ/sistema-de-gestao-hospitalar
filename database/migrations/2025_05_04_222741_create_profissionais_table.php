@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('profissionais', function (Blueprint $table) {
             $table->id();
+            $table->string('nome');
+            $table->string('email')->unique();
+            $table->string('cpf')->unique();
+            $table->string('senha');
+            $table->string('especialidade');
+            $table->string('crm')->unique();
+            $table->string('telefone');
+            $table->string('endereco');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
     }

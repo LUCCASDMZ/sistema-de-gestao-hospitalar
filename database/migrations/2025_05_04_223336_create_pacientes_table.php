@@ -14,6 +14,12 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('cpf')->unique();
             $table->string('password');
+            $table->string('telefone');
+            $table->string('endereco');
+            $table->date('data_nascimento');
+            $table->string('sexo');
+            $table->string('estado_civil');
+            $table->string('profissao');
             $table->rememberToken();
             $table->timestamps();
         });

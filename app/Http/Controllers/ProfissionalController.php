@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profissionais;
+use App\Models\Profissional;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 
-class ProfissionaisController extends Controller
+class ProfissionalController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,7 +17,7 @@ class ProfissionaisController extends Controller
     public function index()
     {
         try {
-            $profissionais = Profissionais::all();
+            $profissionais = Profissional::all();
             Log::info('Lista de profissionais retornada');
             return response()->json($profissionais);
         } catch (\Exception $e) {
@@ -50,7 +50,7 @@ class ProfissionaisController extends Controller
                 'endereco' => 'required|string'
             ]);
 
-            $profissional = Profissionais::create([
+            $profissional = Profissional::create([
                 'nome' => $validated['nome'],
                 'email' => $validated['email'],
                 'cpf' => $validated['cpf'],
@@ -72,7 +72,8 @@ class ProfissionaisController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Erro ao registrar profissional', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
                 'message' => 'Erro ao registrar profissional',
@@ -82,9 +83,67 @@ class ProfissionaisController extends Controller
     }
 
     /**
+     * Authenticate a professional
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function login(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|string|email',
+                'senha' => 'required|string',
+            ]);
+
+            $profissional = Profissional::where('email', $validated['email'])->first();
+
+            if (!$profissional || !Hash::check($validated['senha'], $profissional->senha)) {
+                Log::warning('Tentativa de login inválida', [
+                    'email' => $validated['email']
+                ]);
+                return response()->json([
+                    'message' => 'Credenciais inválidas'
+                ], 401);
+            }
+
+            $token = $profissional->createToken('auth-token')->plainTextToken;
+
+            Log::info('Profissional logado com sucesso', [
+                'profissional_id' => $profissional->id
+            ]);
+
+            return response()->json([
+                'message' => 'Login realizado com sucesso',
+                'token' => $token,
+                'profissional' => $profissional->only([
+                    'id',
+                    'nome',
+                    'email',
+                    'cpf',
+                    'especialidade',
+                    'crm',
+                    'telefone',
+                    'endereco'
+                ])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao realizar login', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Erro ao realizar login',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Display the specified resource.
      */
-    public function show(Profissionais $profissionais)
+    public function show(Profissional $profissional)
     {
         //
     }
@@ -92,7 +151,7 @@ class ProfissionaisController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Profissionais $profissionais)
+    public function edit(Profissional $profissional)
     {
         //
     }
@@ -100,7 +159,7 @@ class ProfissionaisController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Profissionais $profissionais)
+    public function update(Request $request, Profissional $profissional)
     {
         //
     }
@@ -108,7 +167,7 @@ class ProfissionaisController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Profissionais $profissionais)
+    public function destroy(Profissional $profissional)
     {
         //
     }

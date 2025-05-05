@@ -21,3 +21,25 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Logs
+storage/logs/*.log
+storage/logs/laravel.log
+
+# Cache
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+
+# Testes
+tests/_output
+
+# IDE
+.idea/
+.vscode/
+
+# Outros
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
