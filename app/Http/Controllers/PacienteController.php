@@ -20,30 +20,26 @@ class PacienteController extends Controller
     public function register(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'nome' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:pacientes',
-                'cpf' => 'required|string|max:11|unique:pacientes',
-                'password' => 'required|string|min:8',
-                'telefone' => 'required|string',
-                'endereco' => 'required|string',
-                'data_nascimento' => 'required|date',
-                'sexo' => 'required|string',
-                'estado_civil' => 'required|string',
-                'profissao' => 'required|string'
-            ]);
+            $validator = Paciente::validate($request->all());
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Erro de validação',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             $paciente = Paciente::create([
-                'nome' => $validated['nome'],
-                'email' => $validated['email'],
-                'cpf' => $validated['cpf'],
-                'password' => Hash::make($validated['password']),
-                'telefone' => $validated['telefone'],
-                'endereco' => $validated['endereco'],
-                'data_nascimento' => $validated['data_nascimento'],
-                'sexo' => $validated['sexo'],
-                'estado_civil' => $validated['estado_civil'],
-                'profissao' => $validated['profissao']
+                'nome' => $request->nome,
+                'email' => $request->email,
+                'cpf' => $request->cpf,
+                'password' => Hash::make($request->password),
+                'telefone' => $request->telefone,
+                'endereco' => $request->endereco,
+                'data_nascimento' => $request->data_nascimento,
+                'sexo' => $request->sexo,
+                'estado_civil' => $request->estado_civil,
+                'profissao' => $request->profissao
             ]);
 
             $token = $paciente->createToken('auth-token')->plainTextToken;

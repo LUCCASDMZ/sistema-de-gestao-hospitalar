@@ -15,13 +15,13 @@ class AuthTest extends TestCase
         // Cria um profissional para teste
         $profissional = Profissional::factory()->create([
             'email' => 'teste@exemplo.com',
-            'senha' => bcrypt('senha123')
+            'password' => bcrypt('senha123')
         ]);
 
         // Tenta fazer login
         $response = $this->postJson('/api/profissionais/login', [
             'email' => 'teste@exemplo.com',
-            'senha' => 'senha123'
+            'password' => 'senha123'
         ]);
 
         $response->assertStatus(200)
@@ -40,7 +40,7 @@ class AuthTest extends TestCase
     {
         $response = $this->postJson('/api/profissionais/login', [
             'email' => 'inexistente@exemplo.com',
-            'senha' => 'senhaincorreta'
+            'password' => 'senhaincorreta'
         ]);
 
         $response->assertStatus(401)

@@ -45,7 +45,7 @@ class ProfissionalController extends Controller
                 'nome' => 'required|string|max:255',
                 'email' => 'required|string|email|unique:profissionais',
                 'cpf' => 'required|string|unique:profissionais',
-                'senha' => 'required|string|min:8',
+                'password' => 'required|string|min:8',
                 'especialidade' => 'required|string',
                 'crm' => 'required|string',
                 'telefone' => 'required|string',
@@ -56,7 +56,7 @@ class ProfissionalController extends Controller
                 'nome' => $validated['nome'],
                 'email' => $validated['email'],
                 'cpf' => $validated['cpf'],
-                'senha' => Hash::make($validated['senha']),
+                'password' => Hash::make($validated['password']),
                 'especialidade' => $validated['especialidade'],
                 'crm' => $validated['crm'],
                 'telefone' => $validated['telefone'],
@@ -95,12 +95,12 @@ class ProfissionalController extends Controller
         try {
             $validated = $request->validate([
                 'email' => 'required|string|email',
-                'senha' => 'required|string',
+                'password' => 'required|string',
             ]);
 
             $profissional = Profissional::where('email', $validated['email'])->first();
 
-            if (!$profissional || !Hash::check($validated['senha'], $profissional->senha)) {
+            if (!$profissional || !Hash::check($validated['password'], $profissional->password)) {
                 Log::warning('Tentativa de login inválida', [
                     'email' => $validated['email']
                 ]);

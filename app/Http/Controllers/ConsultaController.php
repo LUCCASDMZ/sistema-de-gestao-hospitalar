@@ -19,12 +19,66 @@ class ConsultaController extends Controller
     public function agendar(Request $request)
     {
         try {
-            $validated = $request->validate([
+            Log::info('Dados recebidos para agendamento:', $request->all());
+            
+            $validator = \Validator::make($request->all(), [
                 'nome_profissional' => 'required|string',
-                'data' => 'required|date|after:today',
-                'hora' => 'required|string|date_format:H:i',
+                'data' => [
+                    'required',
+                    'date',
+                    'after:today',
+                    function ($attribute, $value, $fail) {
+                        try {
+                            $data = \Carbon\Carbon::parse($value);
+                            if ($data->isWeekend()) {
+                                $fail('Não é possível agendar consultas aos finais de semana.');
+                            }
+                        } catch (\Exception $e) {
+                            $fail('A data fornecida é inválida.');
+                        }
+                    },
+                    function ($attribute, $value, $fail) {
+                        try {
+                            $dataAgendamento = \Carbon\Carbon::parse($value);
+                            $agora = now();
+                            $diferencaHoras = $agora->diffInHours($dataAgendamento, false);
+                            
+                            if ($diferencaHoras < 24) {
+                                $fail('O agendamento deve ser feito com pelo menos 24 horas de antecedência.');
+                            }
+                        } catch (\Exception $e) {
+                            $fail('Erro ao validar a data de agendamento.');
+                        }
+                    },
+                ],
+                'hora' => [
+                    'required',
+                    'date_format:H:i',
+                    function ($attribute, $value, $fail) {
+                        // Verifica se está no horário comercial (8h às 18h)
+                        if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $value)) {
+                            $fail('O formato do horário é inválido. Use o formato HH:MM.');
+                            return;
+                        }
+                        
+                        $hora = (int) explode(':', $value)[0];
+                        if ($hora < 8 || $hora >= 18) {
+                            $fail('O horário de atendimento é das 8h às 18h.');
+                        }
+                    },
+                ],
                 'observacoes' => 'nullable|string',
             ]);
+
+            if ($validator->fails()) {
+                Log::error('Falha na validação:', $validator->errors()->toArray());
+                return response()->json([
+                    'message' => 'Dados inválidos',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
 
             // Encontrar o profissional pelo nome (case insensitive)
             $profissional = Profissional::whereRaw('LOWER(nome) = ?', [strtolower($validated['nome_profissional'])])->first();
@@ -37,11 +91,39 @@ class ConsultaController extends Controller
 
             // Verificar se já existe consulta agendada para o mesmo horário
             $data_hora = $validated['data'] . ' ' . $validated['hora'];
+            
+            Log::info('Verificando horário ocupado', [
+                'profissional_id' => $profissional->id,
+                'data_hora' => $data_hora,
+                'data' => $validated['data'],
+                'hora' => $validated['hora']
+            ]);
+
+            // Verifica se já existe consulta agendada para o mesmo profissional no mesmo horário
+            // e que não esteja cancelada
+            $dataHoraFormatada = \Carbon\Carbon::parse($data_hora)->format('Y-m-d H:i:00');
+            
             $exists = Consulta::where('profissional_id', $profissional->id)
-                ->where('data_hora', $data_hora)
+                ->whereRaw("DATE_FORMAT(data_hora, '%Y-%m-%d %H:%i:00') = ?", [$dataHoraFormatada])
+                ->where('status', '!=', 'cancelada')
                 ->exists();
 
+            Log::info('Resultado da verificação', [
+                'exists' => $exists,
+                'profissional_id' => $profissional->id,
+                'data_hora' => $dataHoraFormatada,
+                'data_hora_original' => $data_hora
+            ]);
+
             if ($exists) {
+                Log::warning('Tentativa de agendamento em horário ocupado', [
+                    'profissional_id' => $profissional->id,
+                    'data_hora' => $data_hora,
+                    'consultas_existentes' => Consulta::where('profissional_id', $profissional->id)
+                        ->where('data_hora', $data_hora)
+                        ->get()
+                        ->toArray()
+                ]);
                 return response()->json([
                     'message' => 'Horário já está ocupado'
                 ], 400);

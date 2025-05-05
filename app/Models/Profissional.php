@@ -19,7 +19,7 @@ class Profissional extends Authenticatable
         'nome',
         'email',
         'cpf',
-        'senha',
+        'password',
         'especialidade',
         'crm',
         'telefone',
@@ -27,9 +27,19 @@ class Profissional extends Authenticatable
     ];
 
     protected $hidden = [
-        'senha',
+        'password',
         'remember_token',
     ];
+    
+    /**
+     * Get the password for the user.
+     *
+     * @return string
+     */
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
 
     protected $casts = [
         'email_verified_at' => 'datetime',
