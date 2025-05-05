@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Profissional extends Authenticatable
 {
+    // Profissional model for hospital management system
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'profissionais';
@@ -22,7 +23,7 @@ class Profissional extends Authenticatable
         'especialidade',
         'crm',
         'telefone',
-        'endereco'
+        'endereco',
     ];
 
     protected $hidden = [

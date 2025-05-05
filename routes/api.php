@@ -15,8 +15,11 @@ Route::post('/profissionais/login', [ProfissionalController::class, 'login']);
 
 // Rotas de consulta (protegidas)
 Route::middleware('auth:sanctum')->group(function () {
+    // Rotas de consulta
     Route::post('/consultas/agendar', [ConsultaController::class, 'agendar']);
     Route::post('/consultas/cancelar/{id}', [ConsultaController::class, 'cancelar']);
     Route::get('/consultas', [ConsultaController::class, 'listar']);
-    Route::post('consulta/agendar', [ConsultaController::class, 'agendar']);
+
+    // Rota para histórico do paciente
+    Route::get('/paciente/historico', [PacienteController::class, 'historico']);
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Paciente;
+use App\Models\Consulta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -136,6 +137,53 @@ class PacienteController extends Controller
             ]);
             return response()->json([
                 'message' => 'Erro ao realizar login',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Retorna o histórico de consultas do paciente autenticado
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function historico()
+    {
+        try {
+            $paciente = Auth::user();
+            
+            $consultas = Consulta::where('paciente_id', $paciente->id)
+                ->with('profissional') // Carrega o relacionamento com o profissional
+                ->orderBy('data_hora', 'desc')
+                ->get(['id', 'profissional_id', 'data_hora', 'observacoes', 'status']);
+
+            // Formata os dados para a resposta
+            $historico = $consultas->map(function($consulta) {
+                return [
+                    'id' => $consulta->id,
+                    'data' => $consulta->data_hora->format('d/m/Y'),
+                    'hora' => $consulta->data_hora->format('H:i'),
+                    'profissional' => $consulta->profissional->nome,
+                    'observacoes' => $consulta->observacoes,
+                    'status' => $consulta->status
+                ];
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $historico
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar histórico de consultas', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Erro ao buscar histórico de consultas',
                 'error' => $e->getMessage()
             ], 500);
         }
