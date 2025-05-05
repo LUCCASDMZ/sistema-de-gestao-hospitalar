@@ -22,4 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rota para histórico do paciente
     Route::get('/paciente/historico', [PacienteController::class, 'historico']);
+    
+    // Rota para a agenda do profissional
+    Route::get('/profissional/agenda', [ProfissionalController::class, 'minhaAgenda']);
 });

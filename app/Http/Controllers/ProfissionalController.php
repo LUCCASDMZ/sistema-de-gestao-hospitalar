@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profissional;
+use App\Models\Consulta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class ProfissionalController extends Controller
 {
@@ -170,5 +172,51 @@ class ProfissionalController extends Controller
     public function destroy(Profissional $profissional)
     {
         //
+    }
+
+    /**
+     * Retorna a agenda do profissional autenticado
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function minhaAgenda()
+    {
+        try {
+            $profissional = Auth::user();
+            
+            $consultas = Consulta::with('paciente')
+                ->where('profissional_id', $profissional->id)
+                ->orderBy('data_hora', 'asc')
+                ->get();
+
+            $agenda = $consultas->map(function($consulta) {
+                return [
+                    'id' => $consulta->id,
+                    'data' => $consulta->data_hora->format('d/m/Y'),
+                    'hora' => $consulta->data_hora->format('H:i'),
+                    'paciente' => $consulta->paciente->nome,
+                    'observacoes' => $consulta->observacoes,
+                    'status' => $consulta->status
+                ];
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $agenda
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar agenda do profissional', [
+                'profissional_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Erro ao buscar agenda',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
