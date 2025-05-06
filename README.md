@@ -78,3 +78,7 @@ php artisan test
 ## Licença
 
 O projeto está licenciado sob a [licença MIT](LICENSE).
+
+---
+
+Desenvolvido por [Luccas Duarte](mailto:luccasdm.dev@gmail.com)
