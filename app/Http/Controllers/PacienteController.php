@@ -51,7 +51,6 @@ class PacienteController extends Controller
 
             return response()->json([
                 'message' => 'Paciente registrado com sucesso',
-                'token' => $token,
                 'paciente' => $paciente->only([
                     'id',
                     'nome',
